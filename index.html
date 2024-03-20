@@ -67,7 +67,7 @@
                         }
                         // データを/updateエンドポイントに送信
                         $.ajax({
-                            url: 'http://localhost:8000/update',
+                            url: '/update',
                             method: 'POST',
                             data: JSON.stringify(data["member"]),
                             contentType: 'application/json',
@@ -75,6 +75,7 @@
                                 console.log('Data sent successfully');
                             },
                             error: function () {
+                                alert('Error sending data');
                                 console.log('Error sending data');
                             }
                         });
