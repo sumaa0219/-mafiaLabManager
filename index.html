@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>入退出管理ページ</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>入退出管理</h1>
+    <button id="loadData">起動</button>
+    <br><br><br>
+    <div id="content"></div>
+
+    <script>
+        if ('AmbientLightSensor' in window) {
+            const sensor = new AmbientLightSensor();
+            console.log(sensor.illuminance);
+            sensor.onreading = () => {
+                console.log('Current light level:', sensor.illuminance);
+                if (sensor.illuminance < 50) {  // 50 lux以下であれば
+                    document.body.style.backgroundColor = 'black';  // 画面を真っ黒にする
+                } else {
+                    document.body.style.backgroundColor = 'white';  // それ以外は白にする
+                }
+            };
+            sensor.onerror = (event) => {
+                console.log(event.error.name, event.error.message);
+            };
+            sensor.start();
+        } else {
+            console.log('Ambient Light Sensor is not supported by this browser.');
+        }
+        $(document).ready(function () {
+            $("#loadData").click(function () {
+                $.getJSON("memberStatus.json", function (data) {
+                    var keys = Object.keys(data["member"]);
+                    var table = $("#content").append("<table></table>").find("table");  // テーブル要素を作成
+                    for (var key in data["member"]) {
+                        var name = data["member"][key]["name"];
+                        var status = data["member"][key]["inRoom"];
+                        var button;
+                        var row = $("<tr></tr>");  // 行要素を作成
+                        row.append("<td>" + name + "</td>");  // 名前をセルに追加
+                        if (status === false) {  // statusがfalseであれば
+                            button = $("<td><button class='status-button' data-key='" + key + "'>" + "帰宅" + "</button></td>");  // "false"と書かれたボタンをセルに追加
+                            button.find("button").css("background-color", "red");
+                        } else {
+                            button = $("<td><button class='status-button' data-key='" + key + "'>" + "在室" + "</button></td>");  // "true"と書かれたボタンをセルに追加
+                            button.find("button").css("background-color", "green");
+                        }
+                        row.append(button);  // ボタンを行に追加
+                        table.append(row);  // 行をテーブルに追加
+                    }
+
+
+                    // ボタンがクリックされたときのイベントハンドラを設定
+                    $(".status-button").click(function () {
+                        var key = $(this).data("key");  // ボタンのdata-key属性からキーを取得
+                        data["member"][key]["inRoom"] = !data["member"][key]["inRoom"];  // inRoomステータスを反転
+                        if (data["member"][key]["inRoom"] === false) {  // ステータスがfalseであれば
+                            $(this).css("background-color", "red");  // 背景色を赤に設定
+                            $(this).text("帰宅");
+                        } else {
+                            $(this).css("background-color", "green");  // 背景色を緑に設定
+                            $(this).text("在室");
+                        }
+                        // データを/updateエンドポイントに送信
+                        $.ajax({
+                            url: 'http://localhost:8000/update',
+                            method: 'POST',
+                            data: JSON.stringify(data["member"]),
+                            contentType: 'application/json',
+                            success: function () {
+                                console.log('Data sent successfully');
+                            },
+                            error: function () {
+                                console.log('Error sending data');
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+    <style>
+        button {
+            padding: 10px 20px;
+            /* 上下左右の余白 */
+            font-size: 16px;
+            /* テキストの大きさ */
+        }
+
+        /* ボタンの背景色とテキストの色を指定 */
+        button.status-button {
+            /* ボタンの背景色 */
+            color: rgb(0, 0, 0);
+            /* ボタンのテキストの色 */
+            border: none;
+            /* ボーダーをなくす */
+            border-radius: 5px;
+            /* ボタンの角を丸くする */
+        }
+    </style>
+</body>
+
+</html>
