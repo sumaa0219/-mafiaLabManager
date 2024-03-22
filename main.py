@@ -15,6 +15,8 @@ load_dotenv()
 TOKEN = os.environ['token']
 consoleServer = os.environ['consoleServer']
 consoleChat = os.environ['consoleChat']
+logServer = os.environ['logServer']
+logChannel = os.environ['logChannel']
 
 intents = discord.Intents.default()  # 適当に。
 intents.message_content = True
@@ -95,8 +97,8 @@ async def addmember(interaction: discord.Interaction):
 
 
 async def send_console(message):
-    guild = client.get_guild(int(consoleServer))
-    channel = guild.get_channel(int(consoleChat))
+    guild = client.get_guild(int(logServer))
+    channel = guild.get_channel(int(logChannel))
     await channel.send(message)
 
 
