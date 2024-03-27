@@ -9,7 +9,7 @@ import time
 from pydantic import BaseModel
 import datetime
 import jsonDB
-
+import socket
 
 load_dotenv()
 TOKEN = os.environ['token']
@@ -94,6 +94,21 @@ async def addmember(interaction: discord.Interaction):
 
     await interaction.response.send_message(
         interaction.user.display_name+"をメンバーを追加しました")
+
+
+@tree.command(name="ip", description="IPアドレスを表示します")
+async def ip(interaction: discord.Interaction):
+    try:
+        # ソケットを作成して、ホスト名を取得し、ローカルIPアドレスを解決します
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception as e:
+        print("Error occurred while getting local IP:", e)
+        local_ip = None
+
+    await interaction.response.send_message("IPアドレス: "+local_ip)
 
 
 async def send_console(message):
