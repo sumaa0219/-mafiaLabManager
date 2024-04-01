@@ -33,74 +33,86 @@
         }
         $(document).ready(function () {
             $("#loadData").click(function () {
-                $.getJSON("memberStatus.json", function (data) {
-                    var keys = Object.keys(data["member"]);
-                    var table = $("#content").append("<table></table>").find("table");  // テーブル要素を作成
-                    for (var key in data["member"]) {
-                        var name = data["member"][key]["name"];
-                        var status = data["member"][key]["inRoom"];
-                        var button;
-                        var row = $("<tr></tr>");  // 行要素を作成
-                        row.append("<td>" + name + "</td>");  // 名前をセルに追加
-                        if (status === false) {  // statusがfalseであれば
-                            button = $("<td><button class='status-button' data-key='" + key + "'>" + "帰宅" + "</button></td>");  // "false"と書かれたボタンをセルに追加
-                            button.find("button").css("background-color", "red");
-                        } else {
-                            button = $("<td><button class='status-button' data-key='" + key + "'>" + "在室" + "</button></td>");  // "true"と書かれたボタンをセルに追加
-                            button.find("button").css("background-color", "green");
-                        }
-                        row.append(button);  // ボタンを行に追加
-                        table.append(row);  // 行をテーブルに追加
+                // データの取得と更新処理
+                updateData();
+                setInterval(updateData, 10000);  // 10秒ごとにupdateDataを実行
+            });
+        });
+
+        function updateData() {
+            $("#content").empty();  // 既存のテーブルをクリア
+            $.getJSON("memberStatus.json", function (data) {
+                var keys = Object.keys(data["member"]);
+                var table = $("#content").append("<table></table>").find("table");  // テーブル要素を作成
+                var rowName = $("<tr></tr>");  // 名前用の行要素を作成
+                var rowButton = $("<tr></tr>");  // ボタン用の行要素を作成
+
+                for (var key in data["member"]) {
+                    var name = data["member"][key]["name"];
+                    var status = data["member"][key]["inRoom"];
+                    var button;
+
+                    rowName.append("<td class='vertical-text'>" + name + "</td>");  // 名前をセルに追加  // 名前をセルに追加
+
+                    if (status === false) {  // statusがfalseであれば
+                        button = $("<button class='status-button' data-key='" + key + "'>" + "帰宅" + "</button>");  // "false"と書かれたボタンを作成
+                        button.css("background-color", "#FF3737");
+                    } else {
+                        button = $("<button class='status-button' data-key='" + key + "'>" + "在室" + "</button>");  // "true"と書かれたボタンを作成
+                        button.css("background-color", "green");
                     }
 
+                    rowButton.append($("<td></td>").append(button));  // ボタンをセルに追加
+                }
 
-                    // ボタンがクリックされたときのイベントハンドラを設定
-                    $(".status-button").click(function () {
-                        var key = $(this).data("key");  // ボタンのdata-key属性からキーを取得
-                        data["member"][key]["inRoom"] = !data["member"][key]["inRoom"];  // inRoomステータスを反転
-                        if (data["member"][key]["inRoom"] === false) {  // ステータスがfalseであれば
-                            $(this).css("background-color", "red");  // 背景色を赤に設定
-                            $(this).text("帰宅");
-                        } else {
-                            $(this).css("background-color", "green");  // 背景色を緑に設定
-                            $(this).text("在室");
+                table.append(rowName);  // 名前の行をテーブルに追加
+                table.append(rowButton);  // ボタンの行をテーブルに追加
+
+                // ボタンがクリックされたときのイベントハンドラを設定
+                $(".status-button").click(function () {
+                    var key = $(this).data("key");  // ボタンのdata-key属性からキーを取得
+                    data["member"][key]["inRoom"] = !data["member"][key]["inRoom"];  // inRoomステータスを反転
+                    if (data["member"][key]["inRoom"] === false) {  // ステータスがfalseであれば
+                        $(this).css("background-color", "red");  // 背景色を赤に設定
+                        $(this).text("帰宅");
+                    } else {
+                        $(this).css("background-color", "green");  // 背景色を緑に設定
+                        $(this).text("在室");
+                    }
+                    // データを/updateエンドポイントに送信
+                    $.ajax({
+                        url: '/update',
+                        method: 'POST',
+                        data: JSON.stringify(data["member"]),
+                        contentType: 'application/json',
+                        success: function () {
+                            console.log('Data sent successfully');
+                        },
+                        error: function () {
+                            alert('Error sending data');
+                            console.log('Error sending data');
                         }
-                        // データを/updateエンドポイントに送信
-                        $.ajax({
-                            url: '/update',
-                            method: 'POST',
-                            data: JSON.stringify(data["member"]),
-                            contentType: 'application/json',
-                            success: function () {
-                                console.log('Data sent successfully');
-                            },
-                            error: function () {
-                                alert('Error sending data');
-                                console.log('Error sending data');
-                            }
-                        });
                     });
                 });
             });
-        });
+        };
     </script>
     <style>
         button {
+            display: block;
+            /* ブロック要素として扱う */
             padding: 10px 20px;
-            /* 上下左右の余白 */
             font-size: 16px;
-            /* テキストの大きさ */
         }
 
-        /* ボタンの背景色とテキストの色を指定 */
         button.status-button {
-            /* ボタンの背景色 */
             color: rgb(0, 0, 0);
-            /* ボタンのテキストの色 */
             border: none;
-            /* ボーダーをなくす */
             border-radius: 5px;
-            /* ボタンの角を丸くする */
+        }
+
+        .vertical-text {
+            writing-mode: vertical-rl;
         }
     </style>
 </body>
