@@ -56,10 +56,12 @@
 
                     if (status === false) {  // statusがfalseであれば
                         button = $("<button class='status-button' data-key='" + key + "'>" + "帰宅" + "</button>");  // "false"と書かれたボタンを作成
-                        button.css("background-color", "#FF3737");
+                        button.css("background-color", "#FF3131");
+                        button.css("color", "#222");
                     } else {
                         button = $("<button class='status-button' data-key='" + key + "'>" + "在室" + "</button>");  // "true"と書かれたボタンを作成
-                        button.css("background-color", "green");
+                        button.css("background-color", "#219A12");
+                        button.css("color", "#FFF");
                     }
 
                     rowButton.append($("<td></td>").append(button));  // ボタンをセルに追加
