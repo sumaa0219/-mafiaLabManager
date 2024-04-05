@@ -76,9 +76,11 @@
                     data["member"][key]["inRoom"] = !data["member"][key]["inRoom"];  // inRoomステータスを反転
                     if (data["member"][key]["inRoom"] === false) {  // ステータスがfalseであれば
                         $(this).css("background-color", "red");  // 背景色を赤に設定
+                        $(this).css("color", "#222")
                         $(this).text("帰宅");
                     } else {
                         $(this).css("background-color", "green");  // 背景色を緑に設定
+                        $(this).css("color", "#FFF")
                         $(this).text("在室");
                     }
                     // データを/updateエンドポイントに送信
