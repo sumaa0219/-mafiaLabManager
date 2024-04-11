@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, Blueprint, jsonify
 import jsonDB
 from flask_cors import CORS
+import os
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 memberJson = "memberStatus.json"
@@ -19,4 +20,10 @@ def update():
     return 'OK', 200
 
 
-app.run(host="0.0.0.0",port=8000, debug=False)
+@app.route("/restartBOT", methods=['GET'])
+def restartBOT():
+    os.system("sudo systemctl restart discordbot.service")
+    return 'OK', 200
+
+
+app.run(host="0.0.0.0", port=8000, debug=False)
