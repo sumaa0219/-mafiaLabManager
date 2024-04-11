@@ -111,6 +111,34 @@ async def ip(interaction: discord.Interaction):
     await interaction.response.send_message("IPアドレス: "+local_ip)
 
 
+@tree.command(name="restart", description="再起動します")
+async def restart(interaction: discord.Interaction):
+    await interaction.response.send_message("再起動しました")
+    os.system("sudo systemctl restart discordbot.service")
+
+
+@tree.command(name="inroom", description="ステータスを入室に変更します")
+async def inroom(interaction: discord.Interaction):
+    memberData = jsonDB.read_db(memberJson)
+    memberData = memberData["member"]
+    memberData[str(interaction.user.id)]["inRoom"] = True
+    jsonDB.update_db(memberJson, "member", memberData)
+    username = interaction.user.display_name
+
+    await interaction.response.send_message(f"{username}を入室にしました")
+
+
+@tree.command(name="outroom", description="ステータスを退室に変更します")
+async def outroom(interaction: discord.Interaction):
+    memberData = jsonDB.read_db(memberJson)
+    memberData = memberData["member"]
+    memberData[str(interaction.user.id)]["inRoom"] = False
+    jsonDB.update_db(memberJson, "member", memberData)
+    username = interaction.user.display_name
+
+    await interaction.response.send_message(f"{username}を退出にしました")
+
+
 async def send_console(message):
     guild = client.get_guild(int(logServer))
     channel = guild.get_channel(int(logChannel))

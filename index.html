@@ -35,6 +35,19 @@
             $("#loadData").click(function () {
                 // データの取得と更新処理
                 updateData();
+                // /restartBOTへのGETリクエストを送信
+                $.ajax({
+                    url: '/restartBOT',
+                    method: 'GET',
+                    contentType: 'application/json',
+                    success: function (data, status) {
+                        console.log("Data: " + data + "\nStatus: " + status);
+                    },
+                    error: function () {
+                        alert('Error sending data');
+                        console.log('Error sending data');
+                    }
+                });
                 setInterval(updateData, 10000);  // 10秒ごとにupdateDataを実行
             });
         });
