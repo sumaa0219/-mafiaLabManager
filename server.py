@@ -5,6 +5,7 @@ import os
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 memberJson = "memberStatus.json"
+iotJson = "lotDevice.json"
 CORS(app)  # CORSを適用
 
 
@@ -24,6 +25,19 @@ def update():
 def restartBOT():
     os.system("sudo systemctl restart discordbot.service")
     return 'OK', 200
+
+
+@app.route("/resisterIP", methods=['POST'])
+def resisterIP():
+    data = request.get_json()
+    jsonDB.update_db(iotJson, "device", data)
+    return 'OK', 200
+
+
+@app.route("/getIotData", methods=['GET'])
+def getIotData():
+    data = jsonDB.read_db(iotJson)
+    return jsonify(data), 200
 
 
 app.run(host="0.0.0.0", port=8000, debug=False)

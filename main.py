@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import datetime
 import jsonDB
 import socket
+import doorFunc
 
 load_dotenv()
 TOKEN = os.environ['token']
@@ -40,7 +41,6 @@ async def on_ready():
 
     @tasks.loop(seconds=interval_seconds)
     async def task_message():
-        print("task executed")
         memberData = jsonDB.read_db(memberJson)
         memberData = memberData["member"]
         for memberID in memberData.keys():
@@ -137,6 +137,19 @@ async def outroom(interaction: discord.Interaction):
     username = interaction.user.display_name
 
     await interaction.response.send_message(f"{username}を退出にしました")
+
+
+@tree.command(name="open", description="ドアを開けます")
+async def open(interaction: discord.Interaction):
+    print("open command")
+    doorFunc.open()
+    await interaction.response.send_message("ドアを開けました")
+
+
+@tree.command(name="close", description="ドアを閉めます")
+async def close(interaction: discord.Interaction):
+    doorFunc.close()
+    await interaction.response.send_message("ドアを閉めました")
 
 
 async def send_console(message):
