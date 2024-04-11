@@ -28,6 +28,7 @@ roleInRoomID = 1219832422934384772
 roleOutRoomID = 1219832539917844600
 
 memberJson = "memberStatus.json"
+lotDeviceJson = "lotDevice.json"
 
 
 @client.event
@@ -141,15 +142,26 @@ async def outroom(interaction: discord.Interaction):
 
 @tree.command(name="open", description="ドアを開けます")
 async def open(interaction: discord.Interaction):
-    print("open command")
-    doorFunc.open()
-    await interaction.response.send_message("ドアを開けました")
+    data = jsonDB.read_db(lotDeviceJson)
+    print(data["device"]["doorlock"]["status"])
+    if data["device"]["doorlock"]["status"] == True:
+        await interaction.response.send_message("ドアはすでに開いています")
+        return
+    else:
+        await interaction.response.send_message("ドアを開けました")
+        doorFunc.open()
 
 
 @tree.command(name="close", description="ドアを閉めます")
 async def close(interaction: discord.Interaction):
-    doorFunc.close()
-    await interaction.response.send_message("ドアを閉めました")
+    data = jsonDB.read_db(lotDeviceJson)
+    print(data["device"]["doorlock"]["status"])
+    if data["device"]["doorlock"]["status"] == False:
+        await interaction.response.send_message("ドアはすでに閉まっています")
+        return
+    else:
+        await interaction.response.send_message("ドアを閉めました")
+        doorFunc.close()
 
 
 async def send_console(message):

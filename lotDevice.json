@@ -1,1 +1,1 @@
-{"device": {"doorlock": {"ip": "192.168.79.78", "status": ""}, "light": {}}}
+{"device": {"doorlock": {"ip": "192.168.79.78", "status": false}, "light": {}}}
