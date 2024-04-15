@@ -14,6 +14,11 @@ def index():
     return app.send_static_file('index.html')
 
 
+@app.route("/check", methods=['GET'])
+def check():
+    return 'OK', 200
+
+
 @app.route('/update', methods=['POST'])
 def update():
     data = request.get_json()  # リクエストボディからJSONデータを取得
