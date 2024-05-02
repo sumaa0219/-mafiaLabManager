@@ -11,6 +11,7 @@ import datetime
 import jsonDB
 import socket
 import doorFunc
+import csv
 
 load_dotenv()
 TOKEN = os.environ['token']
@@ -29,6 +30,52 @@ roleOutRoomID = 1219832539917844600
 
 memberJson = "memberStatus.json"
 lotDeviceJson = "lotDevice.json"
+
+
+global defaultMAC
+
+
+class InputMAC(ui.Modal):
+    def __init__(self):
+        super().__init__(
+            title="起動したいパソコンのMACアドレスを入力してください",
+        )
+        self.uid = discord.ui.TextInput(
+            label="MACアドレス",
+            default=defaultMAC,
+        )
+        self.add_item(self.uid)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        global defaultMAC
+        defaultMAC = defaultMAC.replace("-", ":")
+        with open("user_MAC_data.csv", "r") as f:
+            reader = csv.reader(f)
+            User_MAC_Data = list(reader)
+
+        wronFlag = 0
+        for i, x in enumerate(User_MAC_Data):
+            if x[0] == interaction.user.id:  # ID同じ場合
+                if int(x[1]) == int(self.uid.value):  # 同じかつUIDが同じ場合
+                    pass
+                elif int(x[1]) is not int(self.uid.value):  # UIDだけ違う場合
+                    User_MAC_Data[i][1] = int(self.uid.value)
+                    with open("./user_MAC_data.csv", "w", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerows(User_MAC_Data)
+            else:  # IDが違う
+                wronFlag += 1
+
+        if wronFlag == len(User_MAC_Data):
+            new = [int(interaction.user.id), int(self.uid.value), None]
+            User_MAC_Data.append(new)
+            await send_console(User_MAC_Data)
+
+            with open("./user_MAC_data.csv", "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerows(User_MAC_Data)
+
+        await interaction.response.send_message("指定されたPCを起動しました")
 
 
 @client.event
@@ -76,6 +123,22 @@ async def on_ready():
 
     # タスクを開始
     task_message.start()
+
+
+@tree.command(name="wol", description="PCを起動します")
+async def wakeonlan(interaction: discord.Interaction):
+    global defaultMAC
+    with open('user_MAC_data.csv', 'r') as f:
+        reader = csv.reader(f)
+        data_list = list(reader)
+
+    for i in data_list:
+        if i[0] == interaction.user.id:
+            defaultMAC = i[1]
+
+    # modal = InputMAC()
+    # await interaction.response.send_modal(modal)
+    await interaction.response.send_message("指定されたPCを起動しました")
 
 
 @tree.command(name="addmember", description="入退出管理システムにメンバーを追加します")
