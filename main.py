@@ -75,7 +75,7 @@ class InputMAC(ui.Modal):
                 writer = csv.writer(f)
                 writer.writerows(User_MAC_Data)
 
-        await interaction.response.send_message("指定されたPCを起動しました")
+        await interaction.response.send_message(f"指定されたPCを起動しました{defaultMAC}")
 
 
 @client.event
