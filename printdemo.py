@@ -1,34 +1,37 @@
 import cups
+import time
 
-# CUPS接続の確立
-conn = cups.Connection()
+mainPrinter = "LP-S7160"
 
-# プリンター名とデバイスURIの指定
-printer_name = "LP_S7160"
-device_uri = "lpd://172.24.6.242/"
-ppd_path = "/path/to/driver.ppd"
 
-# プリンターを手動で追加
-try:
-    conn.addPrinter(name=printer_name,
-                    ppdname=ppd_path,
-                    info="LP-S7160",
-                    location="")
-
-    # プリンターオプションを設定
-    conn.addPrinterOption(printer_name, "device-uri", device_uri)
-    conn.addPrinterOption(
-        printer_name, "printer-make-and-model", "EPSON LP-S7160")
-
-    # プリンターを有効にしてジョブを受け入れる
-    conn.enablePrinter(printer_name)
-    conn.acceptJobs(printer_name)
-
-    # プリンターリストの取得と表示
+def print_pdf(printer_name, pdf_path, duplex=True):
+    conn = cups.Connection()
     printers = conn.getPrinters()
-    print(printers.keys())
+    if printer_name not in printers:
+        raise ValueError(f"プリンター '{printer_name}' が見つかりません")
 
-except cups.IPPError as e:
-    print(f"IPPError: {e}")
-except Exception as e:
-    print(f"Error: {e}")
+    options = {
+        'media': 'A4',
+        'fit-to-page': 'true'
+    }
+    if duplex:
+        options['sides'] = 'two-sided-long-edge'
+
+    job_id = conn.printFile(printer_name, pdf_path, "Flask Print Job", options)
+    jpb_status = conn.getJobAttributes(job_id)
+    while jpb_status['job-state'] < 9:
+        time.sleep(1)
+        jpb_status = conn.getJobAttributes(job_id)
+
+        return job_id
+
+
+if __name__ == "__main__":
+    # 使用するプリンターの名前と印刷するPDFファイルのパスを指定
+    printer_name = mainPrinter
+    pdf_path = "./aaaaa.pdf"
+
+    print(print_pdf(printer_name, pdf_path))
+    # conn = cups.Connection()
+    # printers = conn.getPrinters()
+    # print(printers[mainPrinter])

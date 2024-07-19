@@ -3,6 +3,7 @@ import jsonDB
 from flask_cors import CORS
 import os
 import cups
+import glob
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 memberJson = "memberStatus.json"
@@ -10,9 +11,9 @@ iotJson = "lotDevice.json"
 CORS(app)  # CORSを適用
 
 UPLOAD_FOLDER = "printFile"
-ALLOWED_EXTENSIONS = {'pdf'}
+ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-mainPrinter = "LP_S7160"
+mainPrinter = "LP-S7160"
 
 
 @app.route('/')
@@ -34,7 +35,7 @@ def update():
 
 @app.route("/restartBOT", methods=['GET'])
 def restartBOT():
-    os.system("sudo systemctl restart discordbot.service")
+    os.system("sudo systemctl restart bot.service")
     return 'OK', 200
 
 
@@ -55,7 +56,14 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def print_pdf(printer_name, pdf_path, duplex=True):
+def manage_upload_folder():
+    files = glob.glob(os.path.join(UPLOAD_FOLDER, '*'))
+    if len(files) > 10:
+        oldest_file = min(files, key=os.path.getctime)
+        os.remove(oldest_file)
+
+
+def print_file(printer_name, pdf_path, duplex=True):
     conn = cups.Connection()
     printers = conn.getPrinters()
     if printer_name not in printers:
@@ -68,7 +76,9 @@ def print_pdf(printer_name, pdf_path, duplex=True):
     if duplex:
         options['sides'] = 'two-sided-long-edge'
 
-    job_id = conn.printFile(printer_name, pdf_path, "Flask Print Job", options)
+    job_id = conn.printFile(printer_name, pdf_path,
+                            "WebAPP Print Job for sumaa", options)
+    print(job_id)
     return job_id
 
 
@@ -78,7 +88,7 @@ def printer_form():
     <!doctype html>
     <title>Upload PDF for Printing</title>
     <h1>Upload PDF File for Printing</h1>
-    <form action="{{ url_for('print_file') }}" method=post enctype=multipart/form-data>
+    <form action="{{ url_for('print_files_route') }}" method=post enctype=multipart/form-data>
       <input type=file name=file>
       <label for="duplex">両面印刷:</label>
       <select name="duplex">
@@ -91,7 +101,7 @@ def printer_form():
 
 
 @app.route('/print', methods=['POST'])
-def print_file():
+def print_files_route():
     if 'file' not in request.files:
         return redirect(url_for('printer_form'))
 
@@ -100,7 +110,9 @@ def print_file():
         return redirect(url_for('printer_form'))
 
     if file and allowed_file(file.filename):
+        manage_upload_folder()
         filename = file.filename
+        print(filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
 
@@ -108,12 +120,12 @@ def print_file():
         printer_name = mainPrinter
 
         try:
-            # print_pdf(printer_name, file_path, duplex)
-            pass
+            print_file(printer_name, file_path, duplex)
         except Exception as e:
             return f'Printing failed: {e}', 500
 
         return 'File successfully printed', 200
 
 
-app.run(host="0.0.0.0", port=8000, debug=False)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=False)
