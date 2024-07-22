@@ -12,6 +12,7 @@ import jsonDB
 import socket
 import doorFunc
 import csv
+import datetime
 
 load_dotenv()
 TOKEN = os.environ['token']
@@ -225,6 +226,17 @@ async def close(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("ドアを閉めました")
         doorFunc.close()
+
+
+@tree.command(name="reserve", description="施設使用願を作成します")
+async def reserve(interaction: discord.Interaction, times):
+    await interaction.defer()
+    today = datetime.datetime.now()
+    weekList = []
+    for count in times:
+        weekList.append(today + datetime.timedelta(days=7*count))
+    print(weekList)
+    await interaction.followup.send("施設使用願を作成しました")
 
 
 async def send_console(message):
