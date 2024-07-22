@@ -13,6 +13,9 @@ import socket
 import doorFunc
 import csv
 import datetime
+import reserve
+from PyPDF2 import PdfFileMerger
+
 
 load_dotenv()
 TOKEN = os.environ['token']
@@ -229,13 +232,17 @@ async def close(interaction: discord.Interaction):
 
 
 @tree.command(name="reserve", description="施設使用願を作成します")
-async def reserve(interaction: discord.Interaction, times):
-    await interaction.defer()
+async def reserve(interaction: discord.Interaction, times: int):
+    await interaction.response.defer()
     today = datetime.datetime.now()
     weekList = []
-    for count in times:
+    for count in range(times):
         weekList.append(today + datetime.timedelta(days=7*count))
-    print(weekList)
+    for x in range(2):
+        pdfList = []
+        for week in weekList:
+            pdfList.append(reserve.gen_pdf(week, x))
+
     await interaction.followup.send("施設使用願を作成しました")
 
 
