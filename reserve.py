@@ -82,7 +82,4 @@ def gen_pdf(today, option):
 
     cc.showPage()
     cc.save()
-    return f"{output_file_name}.pdf"
-
-
-print(gen_pdf(datetime.now(), 1))
+    return f"./out/{output_file_name}-{optionName}.pdf"

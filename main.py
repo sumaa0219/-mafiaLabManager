@@ -13,8 +13,8 @@ import socket
 import doorFunc
 import csv
 import datetime
-import reserve
-from PyPDF2 import PdfFileMerger
+from reserve import gen_pdf
+from PyPDF2 import PdfMerger
 
 
 load_dotenv()
@@ -143,6 +143,12 @@ async def wakeonlan(interaction: discord.Interaction):
     # modal = InputMAC()
     # await interaction.response.send_modal(modal)
     await interaction.response.send_message("指定されたPCを起動しました")
+    
+@tree.command(name="update", description="githubから最新のコードを取得します")
+async def update(interaction: discord.Interaction):
+    os.system("git pull")
+    await interaction.response.send_message("最新のコードを取得しました。システムを再起動します")
+    os.system("sudo systemctl restart discordbot.service")
 
 
 @tree.command(name="addmember", description="入退出管理システムにメンバーを追加します")
@@ -234,16 +240,31 @@ async def close(interaction: discord.Interaction):
 @tree.command(name="reserve", description="施設使用願を作成します")
 async def reserve(interaction: discord.Interaction, times: int):
     await interaction.response.defer()
+    for file in os.listdir("./out"):
+        file_path = os.path.join("./out", file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
     today = datetime.datetime.now()
     weekList = []
     for count in range(times):
         weekList.append(today + datetime.timedelta(days=7*count))
     for x in range(2):
-        pdfList = []
+        pdfList = PdfMerger()
         for week in weekList:
-            pdfList.append(reserve.gen_pdf(week, x))
+            pdfList.append(gen_pdf(week, x))
+        if x == 0:
+            optionName = "Normal"
+        elif x == 1:
+            optionName = "Vacation"
+        pdfList.write(f"./out/roomReserve-{optionName}.pdf")
+        pdfList.close()
 
-    await interaction.followup.send("施設使用願を作成しました")
+    sendFile = [
+        discord.File(f"./out/roomReserve-Normal.pdf"),
+        discord.File(f"./out/roomReserve-Vacation.pdf")
+    ]
+
+    await interaction.followup.send("施設使用願を作成しました", files=sendFile)
 
 
 async def send_console(message):
